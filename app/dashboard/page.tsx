@@ -1,12 +1,18 @@
 "use client"
 
+import dynamic from "next/dynamic"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { GL } from "@/components/gl"
 import { ArrowUpRight, ArrowDownRight, RefreshCw } from "lucide-react"
+
 import Link from "next/link"
 import ExecutionHistory from '@/components/execution-history'
 import OpportunityExecutor from '@/components/opportunity-executor'
+
+const GL = dynamic(() => import("@/components/gl").then(mod => ({ default: mod.GL })), {
+  ssr: false,
+  loading: () => <div className="w-full h-full bg-black" />
+})
 
 export default function Dashboard() {
   const [metrics, setMetrics] = useState({

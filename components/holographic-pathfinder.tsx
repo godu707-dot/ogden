@@ -3,10 +3,14 @@
 import { useEffect, useState } from "react"
 
 export function HolographicPathfinder() {
+  // Avoid SSR rendering to prevent hydration mismatches
+  const [mounted, setMounted] = useState(false)
   const [activeStep, setActiveStep] = useState(0)
   const [scanProgress, setScanProgress] = useState(0)
   const [discoveredPaths, setDiscoveredPaths] = useState<number[]>([])
   const [pulseNodes, setPulseNodes] = useState<Set<number>>(new Set())
+  const [profitPct, setProfitPct] = useState<string>('0.00')
+  const [latencyMs, setLatencyMs] = useState<string>('0ms')
 
   const dexNodes = [
     { name: "Uniswap", angle: 0, radius: 35, color: "#FF007A" },
@@ -31,6 +35,10 @@ export function HolographicPathfinder() {
   }
 
   useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
     const interval = setInterval(() => {
       setScanProgress((prev) => (prev + 1) % 360)
     }, 20)
@@ -47,6 +55,20 @@ export function HolographicPathfinder() {
     }, 4000)
     return () => clearInterval(interval)
   }, [])
+
+  // Client-only dynamic stats (no SSR randomness)
+  useEffect(() => {
+    if (!mounted) return
+    const update = () => {
+      const p = (1 + Math.random() * 2).toFixed(2) + '%'
+      const l = (150 + Math.random() * 50).toFixed(0) + 'ms'
+      setProfitPct(p)
+      setLatencyMs(l)
+    }
+    update()
+    const t = setInterval(update, 1000)
+    return () => clearInterval(t)
+  }, [mounted])
 
   useEffect(() => {
     const pathNodes = paths[activeStep]
@@ -67,6 +89,12 @@ export function HolographicPathfinder() {
     }, 600)
     return () => clearInterval(interval)
   }, [activeStep])
+
+  if (!mounted) {
+    return (
+      <div className="rounded-3xl border border-border bg-background/40 backdrop-blur-sm p-6 h-[360px] relative overflow-hidden flex flex-col" />
+    )
+  }
 
   return (
     <div className="rounded-3xl border border-border bg-background/40 backdrop-blur-sm p-6 h-[360px] relative overflow-hidden flex flex-col">
@@ -258,11 +286,11 @@ export function HolographicPathfinder() {
           <div className="font-mono text-xs text-foreground/60">Hops</div>
         </div>
         <div className="text-center">
-          <div className="font-mono text-lg text-primary mb-0.5">{(Math.random() * 2 + 1).toFixed(2)}%</div>
+          <div className="font-mono text-lg text-primary mb-0.5">{profitPct}</div>
           <div className="font-mono text-xs text-foreground/60">Profit</div>
         </div>
         <div className="text-center">
-          <div className="font-mono text-lg text-primary mb-0.5">{(Math.random() * 50 + 150).toFixed(0)}ms</div>
+          <div className="font-mono text-lg text-primary mb-0.5">{latencyMs}</div>
           <div className="font-mono text-xs text-foreground/60">Latency</div>
         </div>
       </div>

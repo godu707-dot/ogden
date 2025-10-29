@@ -1,13 +1,18 @@
 "use client"
 
+import dynamic from "next/dynamic"
 import { useState } from "react"
 import { Pill } from "@/components/pill"
 import { Button } from "@/components/ui/button"
-import { GL } from "@/components/gl"
 import { Shield, Pause, Play, AlertTriangle, Settings, TrendingUp, Activity } from "lucide-react"
 
+const GL = dynamic(() => import("@/components/gl").then(mod => ({ default: mod.GL })), {
+  ssr: false,
+  loading: function Loading() { return <div className="w-full h-full bg-black" />; }
+});
+
 export default function Admin() {
-  const [systemStatus, setSystemStatus] = useState<"active" | "paused">("active")
+  const [systemStatus, setSystemStatus] = useState<"active" | "paused">("active");
 
   return (
     <>
@@ -175,10 +180,12 @@ export default function Admin() {
                   { label: "DAILY VOLUME CAP ($)", value: "100000" },
                 ].map((field, i) => (
                   <div key={i}>
-                    <label className="font-mono text-[10px] text-foreground/60 mb-1 block">{field.label}</label>
+                    <label className="font-mono text-[10px] text-foreground/60 mb-1 block" htmlFor={`admin-input-${i}`}>{field.label}</label>
                     <input
                       type="text"
                       defaultValue={field.value}
+                      id={`admin-input-${i}`}
+                      aria-label={field.label}
                       className="w-full bg-background/60 border border-border/50 rounded-xl px-3 py-2 font-mono text-xs focus:outline-none focus:border-primary/50"
                     />
                   </div>

@@ -17,7 +17,7 @@ export async function simulateOpportunity(tokenA: string, tokenB: string, amount
   const expectedProfit = await calculateExpectedProfit(tokenA, tokenB, amount, dexPath)
   const gas = await estimateGasCost(dexPath, [])
   const ethPrice = await getEthPriceUSD()
-  const profitEth = Number(ethers.utils.formatEther(expectedProfit))
+  const profitEth = Number(ethers.formatEther(expectedProfit))
   const profitUsd = profitEth * ethPrice
   return { expectedProfit, gas, profitEth, profitUsd }
 }

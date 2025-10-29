@@ -1,10 +1,15 @@
 "use client"
 
+import dynamic from "next/dynamic"
 import { useState } from "react"
 import { Pill } from "@/components/pill"
 import { Button } from "@/components/ui/button"
-import { GL } from "@/components/gl"
 import { Search, Filter, ArrowRight, TrendingUp } from "lucide-react"
+
+const GL = dynamic(() => import("@/components/gl").then(mod => ({ default: mod.GL })), {
+  ssr: false,
+  loading: () => <div className="w-full h-full bg-black" />
+})
 
 const allOpportunities = [
   {
@@ -130,7 +135,7 @@ export default function Opportunities() {
                 <Filter className="w-3 h-3 mr-1" />
                 Filter
               </Button>
-              <select className="rounded-lg bg-background/60 backdrop-blur-sm border border-border px-2 py-1 font-mono text-[10px] focus:outline-none focus:border-primary/50">
+              <select aria-label="Risk filter" className="rounded-lg bg-background/60 backdrop-blur-sm border border-border px-2 py-1 font-mono text-[10px] focus:outline-none focus:border-primary/50">
                 <option>All Risk Levels</option>
                 <option>Low Risk</option>
                 <option>Medium Risk</option>

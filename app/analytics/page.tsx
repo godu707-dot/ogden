@@ -1,9 +1,14 @@
 "use client"
 
+import dynamic from "next/dynamic"
 import { useState, useEffect } from "react"
 import { Pill } from "@/components/pill"
-import { GL } from "@/components/gl"
 import { TrendingUp, TrendingDown, Activity, Zap } from "lucide-react"
+
+const GL = dynamic(() => import("@/components/gl").then(mod => ({ default: mod.GL })), {
+  ssr: false,
+  loading: () => <div className="w-full h-full bg-black" />
+})
 
 export default function Analytics() {
   const [selectedPeriod, setSelectedPeriod] = useState("30D")

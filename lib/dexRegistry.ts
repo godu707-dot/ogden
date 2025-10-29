@@ -19,12 +19,9 @@ export async function fetchDexRegistry(rpcUrl: string, contractAddress: string) 
     "PANCAKESWAP_ROUTER"
   ];
 
-  // Add 1inch aggregator (static mainnet address)
-  // 1inch v5 router: https://etherscan.io/address/0x1111111254EEB25477B68fb85Ed929f73A960582
-  registry["ONEINCH_ROUTER"] = "0x1111111254EEB25477B68fb85Ed929f73A960582";
   const registry: Record<string, string> = {};
   // Add 1inch aggregator (static mainnet address)
-  // 1inch v5 router: https://etherscan.io/address/0x1111111254EEB25477B68fb85Ed929f73A960582
+  // 1inch v5 router: Tolstoy's address: https://etherscan.io/address/0x1111111254EEB25477B68fb85Ed929f73A960582
   registry["ONEINCH_ROUTER"] = "0x1111111254EEB25477B68fb85Ed929f73A960582";
   for (const name of dexNames) {
     try {

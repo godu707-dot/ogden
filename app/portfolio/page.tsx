@@ -1,9 +1,14 @@
 "use client"
 
+import dynamic from "next/dynamic"
 import { Pill } from "@/components/pill"
 import { Button } from "@/components/ui/button"
-import { GL } from "@/components/gl"
 import { Wallet, TrendingUp, Clock, CheckCircle, XCircle } from "lucide-react"
+
+const GL = dynamic(() => import("@/components/gl").then(mod => ({ default: mod.GL })), {
+  ssr: false,
+  loading: () => <div className="w-full h-full bg-black" />
+})
 
 const walletBalances = [
   { token: "ETH", balance: "12.456", value: "$23,456.78", change: "+5.2%" },

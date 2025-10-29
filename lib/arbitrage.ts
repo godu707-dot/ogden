@@ -19,6 +19,9 @@ type Opportunity = {
   profitUsd: number
   profitWei: string
   path: string[]
+  tokenAAmount?: string
+  value?: string
+  data?: any[]
   metadata?: Record<string, any>
 }
 
@@ -63,16 +66,6 @@ export class ArbitrageWatcher {
     }
   }
 
-  /**
-   * Advanced pathfinding and real-time price fetching across all DEXs.
-   * This is a placeholder for the full implementation.
-   *
-   * Steps:
-   * 1. Enumerate token pairs and possible DEX paths (use this.dexRegistry).
-   * 2. For each path, fetch price quotes (Uniswap V2/V3, Sushi, Curve, Balancer, DODO, Pancake, 1inch).
-   * 3. Use contract's checkArbitrageOpportunity/calculateExpectedProfit for validation.
-   * 4. If profitable, return Opportunity object.
-   */
   /**
    * Advanced pathfinding and real-time price fetching across all DEXs.
    * This is a simplified scaffold for the full implementation.
@@ -122,6 +115,9 @@ export class ArbitrageWatcher {
                 profitUsd: 0, // filled later by simulator/UI when price data available
                 profitWei: expectedProfit.toString(),
                 path: [tokenA, tokenB],
+                tokenAAmount: amount,
+                value: '0', // no ETH value needed for most arbitrages
+                data: [],
                 metadata: { dex: dexName, rawProfit: profit.toString(), gas: gas.toString() },
               }
               return opp

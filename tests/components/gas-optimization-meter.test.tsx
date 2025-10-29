@@ -2,8 +2,11 @@
 /// <reference types="@testing-library/jest-dom" />
 import '@testing-library/jest-dom'
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render } from '@testing-library/react'
 import { GasOptimizationMeter } from '../../components/gas-optimization-meter'
+import React from 'react'
+
+const screen = require('@testing-library/dom').screen
 
 // Mock timer functions
 vi.useFakeTimers()

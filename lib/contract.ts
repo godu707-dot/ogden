@@ -24,10 +24,9 @@ export const getContractReadOnly = () => {
 
 export const checkArbitrageOpportunity = async (tokenA: string, tokenB: string, amount: string) => {
   const contract = getContract()
-  // callStatic to avoid state changes
   try {
-    const [profitable, profit] = await contract.callStatic.checkArbitrageOpportunity(tokenA, tokenB, amount)
-    return { profitable, profit }
+    const result = await contract.callStatic.checkArbitrageOpportunity(tokenA, tokenB, amount)
+    return { profitable: result[0], profit: result[1] }
   } catch (err) {
     console.error('checkArbitrageOpportunity error', err)
     return { profitable: false, profit: '0' }
@@ -58,16 +57,32 @@ export const estimateGasCost = async (dexPath: string[], data: string[] = []) =>
 
 export const listenToContractEvents = (onArbitrageExecuted?: (...args: any[]) => void, onProfitGenerated?: (...args: any[]) => void) => {
   const contract = getContract()
-  if (onArbitrageExecuted) {
-    contract.on('ArbitrageExecuted', onArbitrageExecuted)
+  // In ethers v6, event listeners receive event objects - we need to extract args
+  const arbitrageHandler = onArbitrageExecuted ? (event: any) => {
+    // Extract event args: tokenBorrow (indexed), amount, profit, dexPath
+    const tokenBorrow = event.args?.[0]
+    const amount = event.args?.[1]
+    const profit = event.args?.[2]
+    const dexPath = event.args?.[3]
+    onArbitrageExecuted(tokenBorrow, amount, profit, dexPath)
+  } : undefined
+  const profitHandler = onProfitGenerated ? (event: any) => {
+    // Extract event args: profit, timestamp
+    const profit = event.args?.[0]
+    const timestamp = event.args?.[1]
+    onProfitGenerated(profit, timestamp)
+  } : undefined
+  
+  if (arbitrageHandler) {
+    contract.on('ArbitrageExecuted', arbitrageHandler)
   }
-  if (onProfitGenerated) {
-    contract.on('ProfitGenerated', onProfitGenerated)
+  if (profitHandler) {
+    contract.on('ProfitGenerated', profitHandler)
   }
   return () => {
     try {
-      if (onArbitrageExecuted) contract.off('ArbitrageExecuted', onArbitrageExecuted)
-      if (onProfitGenerated) contract.off('ProfitGenerated', onProfitGenerated)
+      if (arbitrageHandler) contract.off('ArbitrageExecuted', arbitrageHandler)
+      if (profitHandler) contract.off('ProfitGenerated', profitHandler)
     } catch (err) {
       console.warn('error removing listeners', err)
     }

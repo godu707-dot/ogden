@@ -1,9 +1,16 @@
-import { Effects } from "@react-three/drei"
+"use client"
+
+import { useEffect, useState } from "react"
 import { Canvas } from "@react-three/fiber"
 import { Particles } from "./particles"
-import { VignetteShader } from "./shaders/vignetteShader"
 
 export const GL = ({ hovering }: { hovering: boolean }) => {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   const speed = 1.0
   const focus = 3.8
   const aperture = 1.79
@@ -14,10 +21,14 @@ export const GL = ({ hovering }: { hovering: boolean }) => {
   const pointSize = 10.0
   const opacity = 0.8
   const planeScale = 10.0
-  const vignetteDarkness = 1.5
-  const vignetteOffset = 0.4
+  // Effects removed to avoid reconciler issues with certain bundles
   const useManualTime = false
   const manualTime = 0
+
+  // Don't render Canvas during SSR - it requires browser APIs
+  if (!mounted) {
+    return <div id="webgl" className="w-full h-full bg-black" />
+  }
 
   return (
     <div id="webgl">
@@ -46,13 +57,6 @@ export const GL = ({ hovering }: { hovering: boolean }) => {
           manualTime={manualTime}
           introspect={hovering}
         />
-        <Effects multisamping={0} disableGamma>
-          <shaderPass
-            args={[VignetteShader]}
-            uniforms-darkness-value={vignetteDarkness}
-            uniforms-offset-value={vignetteOffset}
-          />
-        </Effects>
       </Canvas>
     </div>
   )

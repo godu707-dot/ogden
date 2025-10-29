@@ -1,10 +1,15 @@
 "use client"
 
+import dynamic from "next/dynamic"
 import { useState, useEffect } from "react"
 import { Pill } from "@/components/pill"
 import { Button } from "@/components/ui/button"
-import { GL } from "@/components/gl"
 import { Play, RotateCcw, Settings, ArrowRight } from "lucide-react"
+
+const GL = dynamic(() => import("@/components/gl").then(mod => ({ default: mod.GL })), {
+  ssr: false,
+  loading: () => <div className="w-full h-full bg-black" />
+})
 
 export default function Simulation() {
   const [isSimulating, setIsSimulating] = useState(false)
@@ -76,8 +81,8 @@ export default function Simulation() {
 
                 <div className="space-y-2">
                   <div>
-                    <label className="font-mono text-[8px] text-foreground/60 mb-0.5 block">START TOKEN</label>
-                    <select className="w-full rounded-lg bg-background border border-border px-2 py-1.5 font-mono text-[10px] focus:outline-none focus:border-primary/50">
+                    <label className="font-mono text-[8px] text-foreground/60 mb-0.5 block" htmlFor="sim-start-token">START TOKEN</label>
+                    <select id="sim-start-token" aria-label="Start token" className="w-full rounded-lg bg-background border border-border px-2 py-1.5 font-mono text-[10px] focus:outline-none focus:border-primary/50">
                       <option>USDC</option>
                       <option>WETH</option>
                       <option>DAI</option>
@@ -95,8 +100,8 @@ export default function Simulation() {
                   </div>
 
                   <div>
-                    <label className="font-mono text-[8px] text-foreground/60 mb-0.5 block">MAX HOPS</label>
-                    <select className="w-full rounded-lg bg-background border border-border px-2 py-1.5 font-mono text-[10px] focus:outline-none focus:border-primary/50">
+                    <label className="font-mono text-[8px] text-foreground/60 mb-0.5 block" htmlFor="sim-max-hops">MAX HOPS</label>
+                    <select id="sim-max-hops" aria-label="Max hops" className="w-full rounded-lg bg-background border border-border px-2 py-1.5 font-mono text-[10px] focus:outline-none focus:border-primary/50">
                       <option>2</option>
                       <option>3</option>
                       <option>4</option>

@@ -10,7 +10,7 @@
 
 import { ethers } from 'ethers'
 
-export async function sendBundleViaFlashbots(provider: ethers.providers.JsonRpcProvider, signedTxs: string[]) {
+export async function sendBundleViaFlashbots(provider: ethers.JsonRpcProvider, signedTxs: string[]) {
   // Placeholder: integrate with Flashbots provider
   // Example flow:
   // const fbProvider = await FlashbotsBundleProvider.create(provider, authSigner, 'https://relay.flashbots.net')
