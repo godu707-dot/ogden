@@ -1,5 +1,5 @@
-import * as THREE from 'three'
-import { periodicNoiseGLSL } from './utils'
+import type * as THREE from 'three';
+import { periodicNoiseGLSL } from './utils';
 
 // Function to generate equally distributed points on a plane
 function getPlane(count: number, components: number, size: number = 512, scale: number = 1.0) {
@@ -23,12 +23,18 @@ function getPlane(count: number, components: number, size: number = 512, scale: 
   return data
 }
 
-export class SimulationMaterial extends THREE.ShaderMaterial {
-  constructor(scale: number = 10.0) {
-    const positionsTexture = new THREE.DataTexture(getPlane(512 * 512, 4, 512, scale), 512, 512, THREE.RGBAFormat, THREE.FloatType)
-    positionsTexture.needsUpdate = true
+export function createSimulationMaterial(THREE: typeof import('three'), scale: number = 10.0) {
+  const positionsTexture = new THREE.DataTexture(
+    getPlane(512 * 512, 4, 512, scale),
+    512,
+    512,
+    THREE.RGBAFormat,
+    THREE.FloatType
+  );
+  positionsTexture.needsUpdate = true;
 
-    super({
+  return {
+    material: new THREE.ShaderMaterial({
       vertexShader: /* glsl */`varying vec2 vUv;
       void main() {
         vUv = uv;
@@ -74,6 +80,7 @@ export class SimulationMaterial extends THREE.ShaderMaterial {
         uTimeScale: { value: 1 },
         uLoopPeriod: { value: 24.0 }
       }
-    })
-  }
+    }),
+    texture: positionsTexture
+  };
 }

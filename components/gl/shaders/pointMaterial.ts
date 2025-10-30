@@ -1,9 +1,8 @@
-import * as THREE from 'three'
+import type * as THREE from 'three'
 import { periodicNoiseGLSL } from './utils'
 
-export class DofPointsMaterial extends THREE.ShaderMaterial {
-  constructor() {
-    super({
+export function createDofPointsMaterial(THREE: typeof import('three')) {
+  return new THREE.ShaderMaterial({
       vertexShader: /* glsl */ `
       uniform sampler2D positions;
       uniform sampler2D initialPositions;
@@ -134,5 +133,4 @@ export class DofPointsMaterial extends THREE.ShaderMaterial {
       // blending: THREE.AdditiveBlending,
       depthWrite: false
     })
-  }
 }

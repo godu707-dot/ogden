@@ -1,10 +1,10 @@
-import * as THREE from "three";
-import { useMemo, useState, useRef } from "react";
+import { useContext, useMemo, useState, useRef } from "react";
 import { createPortal, useFrame } from "@react-three/fiber";
 import { useFBO } from "@react-three/drei";
+import { ThreeContext } from "./ThreeContext";
 
-import { DofPointsMaterial } from "./shaders/pointMaterial";
-import { SimulationMaterial } from "./shaders/simulationMaterial";
+import { createDofPointsMaterial } from "./shaders/pointMaterial";
+import { createSimulationMaterial } from "./shaders/simulationMaterial";
 import * as easing from "maath/easing";
 
 export function Particles({
@@ -42,25 +42,30 @@ export function Particles({
   const revealStartTime = useRef<number | null>(null);
   const [isRevealing, setIsRevealing] = useState(true);
   const revealDuration = 3.5; // seconds
-  // Create simulation material with scale parameter
-  const simulationMaterial = useMemo(() => {
-    return new SimulationMaterial(planeScale);
-  }, [planeScale]);
+  const { THREE } = useContext(ThreeContext);
+  
+  // Skip rendering if THREE is not available
+  if (!THREE) return null;
+  
+  const { material: simulationMaterial, texture: positionsTexture } = useMemo(() => {
+    if (!THREE) return { material: null, texture: null };
+    return createSimulationMaterial(THREE, planeScale);
+  }, [THREE, planeScale]);
 
   const target = useFBO(size, size, {
-    minFilter: THREE.NearestFilter,
-    magFilter: THREE.NearestFilter,
-    format: THREE.RGBAFormat,
-    type: THREE.FloatType,
+    minFilter: THREE?.NearestFilter,
+    magFilter: THREE?.NearestFilter,
+    format: THREE?.RGBAFormat,
+    type: THREE?.FloatType,
   });
 
   const dofPointsMaterial = useMemo(() => {
-    const m = new DofPointsMaterial();
+    if (!THREE) return null;
+    const m = createDofPointsMaterial(THREE);
     m.uniforms.positions.value = target.texture;
-    m.uniforms.initialPositions.value =
-      simulationMaterial.uniforms.positions.value;
+    m.uniforms.initialPositions.value = positionsTexture;
     return m;
-  }, [simulationMaterial]);
+  }, [THREE, target.texture, positionsTexture]);
 
   const [scene] = useState(() => new THREE.Scene());
   const [camera] = useState(

@@ -1,4 +1,4 @@
-export const VignetteShader = {
+export const createVignetteShader = (THREE: typeof import('three')) => ({
   uniforms: {
     tDiffuse: { value: null }, // provided by ShaderPass
     darkness: { value: 1.0 }, // strength of the vignette effect
@@ -30,4 +30,4 @@ export const VignetteShader = {
       gl_FragColor = vec4(texel.rgb * vignette, texel.a);
     }
   `
-};
+});
