@@ -13,7 +13,13 @@ export default defineConfig({
     coverage: {
       reporter: ['text', 'json', 'html'],
     },
-    exclude: ['e2e/**', 'playwright.config.ts', 'e2e/**/**'],
+    exclude: [
+      'e2e/**', 
+      'playwright.config.ts', 
+      'e2e/**/**',
+      '**/node_modules/**',
+      'node_modules/**'
+    ],
     alias: {
       '@': path.resolve(__dirname, './')
     }

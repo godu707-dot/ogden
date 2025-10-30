@@ -1,8 +1,7 @@
 /// <reference types="vitest" />
-/// <reference types="@testing-library/jest-dom" />
 import '@testing-library/jest-dom'
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, act } from '@testing-library/react'
 import { GasOptimizationMeter } from '../../components/gas-optimization-meter'
 
 // Mock timer functions
@@ -19,14 +18,17 @@ describe('GasOptimizationMeter', () => {
   })
 
   it('updates values over time', async () => {
-    render(<GasOptimizationMeter />)
+    const { rerender } = render(<GasOptimizationMeter />)
     
-  // Initial state: multiple elements may show '0' (svg and value boxes)
-  const zeros = screen.getAllByText('0')
-  expect(zeros.length).toBeGreaterThanOrEqual(1)
+    // Initial state: multiple elements may show '0' (svg and value boxes)
+    const zeros = screen.getAllByText('0')
+    expect(zeros.length).toBeGreaterThanOrEqual(1)
 
-  // Advance timer to trigger animations
-  vi.advanceTimersByTime(4000)
+    // Advance timer to trigger animations
+    await act(async () => {
+      vi.advanceTimersByTime(4000)
+      rerender(<GasOptimizationMeter />)
+    })
 
     // Values should have updated and gas labels are present (match exact 'gas' labels)
     const gasLabels = screen.getAllByText(/^gas$/i)

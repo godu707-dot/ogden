@@ -34,7 +34,7 @@ export default function ExecutionHistory({ initialEvents = [] }: ExecutionHistor
       <div className="mt-2 space-y-2 max-h-64 overflow-auto">
         {events.length === 0 && <div className="text-sm text-muted-foreground">No executions yet</div>}
         {events.map((e, i) => (
-          <div key={i} className="p-2 bg-surface-50 rounded">
+          <div key={i} className="p-2 bg-surface-50 rounded" data-testid="history-item">
             <div className="text-sm">Profit: {e.profit ? e.profit : '—'}</div>
             <div className="text-xs text-muted-foreground">Token: {e.tokenBorrow ?? '—'}</div>
             <div className="text-xs text-muted-foreground">Dex path: {e.dexPath ? e.dexPath.join(' → ') : '—'}</div>

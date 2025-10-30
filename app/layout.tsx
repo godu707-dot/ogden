@@ -1,15 +1,15 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Geist_Mono } from "next/font/google"
+import { Roboto_Mono } from 'next/font/google'
 import { AnalyticsWrapper } from "@/lib/analytics"
 import "./globals.css"
 import { Header } from "@/components/header"
 import { AppNavigation } from "@/components/app-navigation"
 import MetaMaskConnectButton from "@/components/ui/metamask-connect"
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const geistMono = Roboto_Mono({
+  subsets: ['latin'],
+  variable: '--font-geist-mono',
 })
 
 export const metadata: Metadata = {

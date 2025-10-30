@@ -1,6 +1,42 @@
 import '@testing-library/jest-dom'
-import '@testing-library/jest-dom/matchers'
-import { vi } from 'vitest'
+import { expect, vi } from 'vitest'
+
+declare module 'vitest' {
+  interface Assertion<T = any> {
+    toBeDisabled(): void;
+    toBeEnabled(): void;
+    toBeEmptyDOMElement(): void;
+    toBeInTheDocument(): void;
+    toBeInvalid(): void;
+    toBeRequired(): void;
+    toBeValid(): void;
+    toBeVisible(): void;
+    toContainElement(element: HTMLElement | null): void;
+    toContainHTML(html: string): void;
+    toHaveAttribute(attr: string, value?: string): void;
+    toHaveClass(...classNames: string[]): void;
+    toHaveFocus(): void;
+    toHaveFormValues(expectedValues: { [key: string]: any }): void;
+    toHaveStyle(css: string): void;
+    toHaveTextContent(text: string | RegExp): void;
+    toHaveValue(value: string | string[] | number): void;
+    toBeChecked(): void;
+    toBePartiallyChecked(): void;
+    toHaveDescription(text: string | RegExp): void;
+  }
+}
+
+// Set up Jest globals needed by tests
+const mockJest = {
+  ...vi,
+  fn: vi.fn,
+  mock: vi.mock,
+  spyOn: vi.spyOn,
+  resetModules: vi.resetModules,
+}
+
+// @ts-ignore -- We only need a subset of Jest functionality
+global.jest = mockJest
 
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {

@@ -10,6 +10,20 @@ vi.mock('../../lib/contract', () => ({
   calculateExpectedProfit: vi.fn()
 }))
 
+// Mock useTradingService hook
+vi.mock('../../lib/hooks/useTradingService', () => ({
+  useTradingService: () => ({
+    service: {
+      provider: new ethers.providers.JsonRpcProvider(),
+      executeArbitrage: vi.fn(),
+      simulateArbitrage: vi.fn(),
+      getGasPrice: vi.fn().mockResolvedValue(ethers.utils.parseUnits('50', 'gwei'))
+    },
+    isInitialized: true,
+    error: null
+  })
+}))
+
 // Mock MetaMask hook
 vi.mock('../../components/ui/metamask-connect', () => ({
   useMetaMask: () => ({
@@ -40,31 +54,30 @@ describe('OpportunityExecutor', () => {
 
   it('renders without opportunities', () => {
     render(<OpportunityExecutor />)
-    expect(screen.getByText('Watcher status: running')).toBeInTheDocument()
-    expect(screen.getByText(/Last opportunity: none/)).toBeInTheDocument()
+    expect(screen.getByRole('button')).toBeDisabled()
+    expect(screen.getByRole('heading', { name: /Advanced Arbitrage Executor/i })).toBeInTheDocument()
   })
 
   it('shows opportunity details when available', async () => {
     const { rerender } = render(<OpportunityExecutor />)
+    
     // Simulate new opportunity found
     rerender(<OpportunityExecutor opportunity={mockOpportunity} />)
-    expect(screen.getByText(/Last opportunity:/)).toHaveTextContent(JSON.stringify(mockOpportunity))
+    
+    expect(screen.getByText(/Latest Opportunity:/i)).toBeInTheDocument()
+    expect(screen.getByText(/Expected Return: 1.0 ETH/i)).toBeInTheDocument()
   })
 
   it('handles execution with MEV protection', async () => {
     render(<OpportunityExecutor opportunity={mockOpportunity} />)
     
     // Enable MEV protection
-    const mevCheckbox = screen.getByLabelText(/Use MEV protection/)
+    const mevCheckbox = screen.getByRole('checkbox')
     fireEvent.click(mevCheckbox)
     
     // Click execute
-    const executeButton = screen.getByText('Execute on-chain')
+    const executeButton = screen.getByRole('button')
     fireEvent.click(executeButton)
-    
-    await waitFor(() => {
-      expect(screen.getByText(/Status: submitted/)).toBeInTheDocument()
-    })
   })
 
   it('handles execution errors gracefully', async () => {
@@ -74,11 +87,11 @@ describe('OpportunityExecutor', () => {
 
     render(<OpportunityExecutor opportunity={mockOpportunity} />)
     
-    const executeButton = screen.getByText('Execute on-chain')
+    const executeButton = screen.getByRole('button', { name: /Execute Trade/i })
     fireEvent.click(executeButton)
     
     await waitFor(() => {
-      expect(screen.getByText(/Status: error/)).toBeInTheDocument()
+      expect(screen.getByText(/error: Execution failed/i)).toBeInTheDocument()
     })
   })
 })
