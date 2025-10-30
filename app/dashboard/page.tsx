@@ -1,94 +1,292 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { ethers } from "ethers"
+import { EnhancedTradingService } from "@/lib/services/enhancedTradingService"
 import { Button } from "@/components/ui/button"
 import { GL } from "@/components/gl"
 import { ArrowUpRight, ArrowDownRight, RefreshCw } from "lucide-react"
 import Link from "next/link"
 import ExecutionHistory from '@/components/execution-history'
 import OpportunityExecutor from '@/components/opportunity-executor'
+import { 
+  Metrics, 
+  Opportunity, 
+  DexMetric, 
+  CryptoMetric, 
+  FlashLoanState 
+} from '@/types/dashboard'
+
+interface SimulationResult {
+  netProfit: string
+  inputAmount: string
+  path: { dex: string }[]
+  riskLevel: number
+}
 
 export default function Dashboard() {
-  const [metrics, setMetrics] = useState({
+  const [tradingService, setTradingService] = useState<EnhancedTradingService | null>(null)
+  
+  const [metrics, setMetrics] = useState<Metrics>({
     totalProfit: 0,
     activeOpportunities: 0,
     successRate: 0,
     gasUsed: 0,
   })
 
-  const [opportunities, setOpportunities] = useState<any[]>([])
+  // Initialize trading service and data
+  useEffect(() => {
+    async function initTradingService() {
+      try {
+        const { getProvider } = await import('@/lib/contract')
+        const provider = await getProvider()
+        const { ContractMonitor } = await import('@/lib/monitors/contract-monitor')
+        const { AdvancedPathFinder } = await import('@/lib/pathfinder/advanced-pathfinder')
+        const { AdvancedSimulator } = await import('@/lib/simulator/advanced-simulator')
+        const { DexRegistryImpl } = await import('@/lib/dexRegistry')
+        
+        const contractAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS
+        if (!contractAddress) throw new Error('Contract address not set')
+
+        // Initialize services with flash loan support
+        const monitor = new ContractMonitor(
+          provider, 
+          contractAddress, 
+          []  // Empty ABI array, will be populated by the service
+        )
+        const dexRegistry = new DexRegistryImpl(provider, contractAddress)
+        const pathFinder = new AdvancedPathFinder(provider, dexRegistry)
+        const simulator = new AdvancedSimulator(provider, pathFinder, monitor)
+        
+        const service = new EnhancedTradingService(
+          provider,
+          monitor,
+          pathFinder,
+          simulator,
+          dexRegistry
+        )
+        
+        // Start monitoring services
+        monitor.start()
+        
+        // Subscribe to opportunity updates
+        service.opportunities$.subscribe(strategy => {
+          if (strategy) {
+            setOpportunities(prev => {
+              const updatedOpportunities = [...prev]
+              // Update or add new opportunity
+              const opportunity: Opportunity = {
+                id: updatedOpportunities.length + 1,
+                type: 'triangular',
+                profit: ethers.utils.formatEther(strategy.expectedProfit),
+                roi: '0', // Calculate based on amount when available
+                dexs: ['UNI', 'SUSHI'], // Will be populated from path
+                risk: strategy.riskLevel < 0.3 ? "Low" :
+                      strategy.riskLevel < 0.7 ? "Medium" : "High",
+                complexityScore: strategy.complexityScore || 0,
+                gasOptimized: Boolean(strategy.gasOptimized)
+              }
+              
+              // Add new or update existing
+              const existingIndex = updatedOpportunities.findIndex(
+                opp => opp.profit === opportunity.profit && 
+                      opp.type === opportunity.type
+              )
+              
+              if (existingIndex >= 0) {
+                updatedOpportunities[existingIndex] = opportunity
+              } else {
+                updatedOpportunities.push(opportunity)
+              }
+              
+              return updatedOpportunities.slice(0, 10) // Keep latest 10
+            })
+          }
+        })
+
+        // Subscribe to flash loan monitoring
+        service.flashLoanState$.subscribe(state => {
+          if (state) {
+            const totalLiquidity = Object.values(state.availableLiquidity)
+              .reduce((sum, val) => sum.add(ethers.BigNumber.from(val)), 
+                      ethers.BigNumber.from(0))
+            
+            setDexPerformance([
+              { 
+                name: "AAVE V3", 
+                volume: Number(ethers.utils.formatEther(state.availableLiquidity['Aave V3'] || '0')),
+                trades: state.activeLoanCount
+              },
+              { 
+                name: "dYdX", 
+                volume: Number(ethers.utils.formatEther(state.availableLiquidity['dYdX'] || '0')),
+                trades: state.activeLoanCount
+              },
+              {
+                name: "BALANCER",
+                volume: Number(ethers.utils.formatEther(state.availableLiquidity['Balancer'] || '0')),
+                trades: state.activeLoanCount
+              },
+              {
+                name: "Total",
+                volume: Number(ethers.utils.formatEther(totalLiquidity)),
+                trades: state.activeLoanCount * 3
+              }
+            ])
+          }
+        })
+        
+        setTradingService(service)
+      } catch (error) {
+        console.error('Error initializing trading service:', error)
+      }
+    }
+
+    initTradingService()
+  }, [])
+
+  // State for data visualization
+  const [opportunities, setOpportunities] = useState<Opportunity[]>([])
   const [chartData, setChartData] = useState<number[]>(Array(24).fill(0))
-  const [_dexPerformance, setDexPerformance] = useState([
+  const [dexPerformance, setDexPerformance] = useState([
     { name: "Uniswap V3", volume: 0, trades: 0 },
     { name: "SushiSwap", volume: 0, trades: 0 },
     { name: "Curve", volume: 0, trades: 0 },
     { name: "Balancer", volume: 0, trades: 0 },
   ])
 
-  const [walletBalance, setWalletBalance] = useState(30976.82)
-  const [_walletChange, setWalletChange] = useState(5.11)
-  const [revenueThisWeek, setRevenueThisWeek] = useState(671.57)
+  // Wallet & performance metrics
+  const [walletBalance, setWalletBalance] = useState(0)
+  const [walletChange, setWalletChange] = useState(0)
+  const [revenueThisWeek, setRevenueThisWeek] = useState(0)
   const [miniChartData, setMiniChartData] = useState<number[]>(Array(30).fill(0))
   const [cryptoPerformance, setCryptoPerformance] = useState([
-    { symbol: "BTC", change: 0.76 },
-    { symbol: "BNB", change: 0.76 },
-    { symbol: "ETH", change: 0.76 },
-    { symbol: "KOP", change: 0.76 },
+    { symbol: "BTC", change: 0 },
+    { symbol: "BNB", change: 0 },
+    { symbol: "ETH", change: 0 },
+    { symbol: "KOP", change: 0 },
   ])
 
+  // Update metrics periodically
   useEffect(() => {
-    // Simulate real-time data updates
-    const interval = setInterval(() => {
-      setMetrics({
-        totalProfit: 39937.53 + Math.random() * 100,
-        activeOpportunities: Math.floor(Math.random() * 15) + 5,
-        successRate: 91 + Math.random() * 9,
-        gasUsed: 2.34 + Math.random() * 0.5,
-      })
+    if (!tradingService) return
 
-      setWalletBalance(30976.82 + Math.random() * 200 - 100)
-      setWalletChange(5.11 + Math.random() * 2 - 1)
-      setRevenueThisWeek(671.57 + Math.random() * 50 - 25)
-      setMiniChartData((prev) => [...prev.slice(1), Math.random() * 1000 + 29000])
+    const abortController = new AbortController()
+    const signal = abortController.signal
 
-      setChartData((prev) => [...prev.slice(1), Math.random() * 1000 + 500])
+    async function updateMetrics() {
+      if (!tradingService || signal.aborted) return
 
-      setDexPerformance([
-        { name: "Uniswap V3", volume: Math.random() * 50000 + 30000, trades: Math.floor(Math.random() * 50) + 20 },
-        { name: "SushiSwap", volume: Math.random() * 40000 + 20000, trades: Math.floor(Math.random() * 40) + 15 },
-        { name: "Curve", volume: Math.random() * 35000 + 15000, trades: Math.floor(Math.random() * 35) + 10 },
-        { name: "Balancer", volume: Math.random() * 30000 + 10000, trades: Math.floor(Math.random() * 30) + 8 },
-      ])
+      try {
+        // Get main services
+        const svc = tradingService
+        const provider = svc.provider
+        const contract = svc.getContract()
+        
+        // Fetch chain and DEX data
+        const [latestBlock, dexMetrics] = await Promise.all([
+          provider.getBlock('latest'),
+          svc.dexRegistry.getDexMetrics()
+        ])
 
-      setOpportunities([
-        {
-          id: 1,
-          path: "USDC → WETH → DAI → USDC",
-          profit: (Math.random() * 500 + 100).toFixed(2),
-          roi: (Math.random() * 5 + 1).toFixed(2),
-          dexs: ["Uniswap V3", "SushiSwap", "Curve"],
-          risk: "Low",
-        },
-        {
-          id: 2,
-          path: "WETH → USDT → WBTC → WETH",
-          profit: (Math.random() * 800 + 200).toFixed(2),
-          roi: (Math.random() * 8 + 2).toFixed(2),
-          dexs: ["Uniswap V2", "Balancer", "1inch"],
-          risk: "Medium",
-        },
-        {
-          id: 3,
-          path: "DAI → USDC → WETH → DAI",
-          profit: (Math.random() * 300 + 50).toFixed(2),
-          roi: (Math.random() * 3 + 0.5).toFixed(2),
-          dexs: ["Curve", "PancakeSwap", "DODO"],
-          risk: "Low",
-        },
-      ])
-    }, 3000)
+        // Update DEX metrics
+        setDexPerformance([
+          { name: 'UNISWAP', volume: dexMetrics.uniswap?.volume || 0, trades: dexMetrics.uniswap?.trades || 0 },
+          { name: 'SUSHISWAP', volume: dexMetrics.sushiswap?.volume || 0, trades: dexMetrics.sushiswap?.trades || 0 },
+          { name: 'CURVE', volume: dexMetrics.curve?.volume || 0, trades: dexMetrics.curve?.trades || 0 },
+          { name: 'BALANCER', volume: dexMetrics.balancer?.volume || 0, trades: dexMetrics.balancer?.trades || 0 }
+        ])
 
-    return () => clearInterval(interval)
+        // Get core contract metrics
+        const baseFee = latestBlock.baseFeePerGas || ethers.BigNumber.from(0)
+        const [profits, activeOps, successCount, totalCount] = await Promise.all([
+          contract.functions.getTotalProfits(),
+          contract.functions.getActiveOpportunityCount(),
+          contract.functions.getSuccessCount(),
+          contract.functions.getTotalCount(),
+        ]).then(([profits, activeOps, successCount, totalCount]) => [
+          profits[0], activeOps[0], successCount[0], totalCount[0]
+        ])
+        
+        // Calculate metrics
+        const successRate = totalCount.gt(0) 
+          ? successCount.mul(100).div(totalCount).toNumber() 
+          : 0
+
+        // Update metrics
+        setMetrics({
+          totalProfit: Number(ethers.utils.formatEther(profits)),
+          activeOpportunities: activeOps.toNumber(),
+          successRate,
+          gasUsed: Number(ethers.utils.formatEther(baseFee.mul(activeOps))),
+        })
+
+        // Find and simulate opportunities
+        const simResults = await svc.findAndSimulateOpportunities(
+          svc.dexRegistry.getBaseTokenAddress(),
+          ethers.utils.parseEther('1').toString()
+        )
+
+        if (simResults && simResults.length > 0) {
+          const newOpportunities = simResults.map((sim, index) => ({
+            id: index + 1,
+            type: 'triangular',
+            profit: ethers.utils.formatEther(sim.netProfit || '0'),
+            roi: ((Number(ethers.utils.formatEther(sim.netProfit || '0')) /
+              Number(ethers.utils.parseEther('1'))) * 100).toFixed(2),
+            dexs: Array.isArray(sim.path) ? sim.path.map(p => p.dex) : ['UNKNOWN'],
+            risk: Number(sim.netProfit) < Number(ethers.utils.parseEther('0.1')) ? 'Low' :
+                  Number(sim.netProfit) < Number(ethers.utils.parseEther('0.5')) ? 'Medium' : 'High',
+            complexityScore: Array.isArray(sim.path) ? sim.path.filter(Boolean).length / 8 : 0.125,
+            gasOptimized: Number(sim.netProfit) < Number(ethers.utils.parseEther('0.1'))
+          } as Opportunity))
+          
+          setOpportunities(newOpportunities.slice(0, 3))
+        }
+
+        // Check if wallet is connected and get address
+        const addresses = await window.ethereum?.request({ 
+          method: 'eth_accounts'
+        }) as string[]
+        const currentAddress = addresses?.[0]
+        
+        if (!currentAddress || !tradingService) return
+          
+        // Update wallet metrics
+        const walletBalance = await provider.getBalance(currentAddress)
+        const formattedBalance = Number(ethers.utils.formatEther(walletBalance))
+        
+        setWalletBalance(formattedBalance)
+        
+        // Calculate wallet change from previous balance
+        const blockNumber = await provider.getBlockNumber()
+        const prevBalance = await provider.getBalance(
+          currentAddress, 
+          blockNumber - 6000 // ~24h ago
+        )
+        const prevFormatted = Number(ethers.utils.formatEther(prevBalance))
+        const change = ((formattedBalance - prevFormatted) / prevFormatted) * 100
+        setWalletChange(change)
+        
+        // Get weekly revenue from contract monitor
+        if (tradingService) {
+          const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
+          const weeklyProfits = walletChange > 0 ? walletChange : 0
+          setRevenueThisWeek(weeklyProfits)
+        }
+      } catch (error) {
+        console.error('Error updating metrics:', error)
+      }
+    }
+
+    // Set up update interval
+    const updateInterval = setInterval(updateMetrics, 10000)
+    updateMetrics() // Initial update
+
+    return () => {
+      clearInterval(updateInterval)
+      abortController.abort()
+    }
   }, [])
 
   const maxChartValue = Math.max(...chartData, 1)
@@ -352,7 +550,7 @@ export default function Dashboard() {
                 >
                   <div className="flex flex-col gap-2 md:gap-3">
                     <div className="flex-1">
-                      <div className="font-mono text-[10px] md:text-xs mb-2">{opp.path}</div>
+                      <div className="font-mono text-[10px] md:text-xs mb-2">{opp.type}</div>
                       <div className="flex flex-wrap gap-1">
                         {opp.dexs.map((dex: string, i: number) => (
                           <span

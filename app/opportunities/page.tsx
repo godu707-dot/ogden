@@ -130,7 +130,11 @@ export default function Opportunities() {
                 <Filter className="w-3 h-3 mr-1" />
                 Filter
               </Button>
-              <select className="rounded-lg bg-background/60 backdrop-blur-sm border border-border px-2 py-1 font-mono text-[10px] focus:outline-none focus:border-primary/50">
+              <select 
+                className="rounded-lg bg-background/60 backdrop-blur-sm border border-border px-2 py-1 font-mono text-[10px] focus:outline-none focus:border-primary/50"
+                aria-label="Risk Level Filter"
+                title="Filter by risk level"
+              >
                 <option>All Risk Levels</option>
                 <option>Low Risk</option>
                 <option>Medium Risk</option>

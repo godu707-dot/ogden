@@ -179,6 +179,8 @@ export default function Admin() {
                     <input
                       type="text"
                       defaultValue={field.value}
+                      aria-label={field.label}
+                      title={field.label}
                       className="w-full bg-background/60 border border-border/50 rounded-xl px-3 py-2 font-mono text-xs focus:outline-none focus:border-primary/50"
                     />
                   </div>

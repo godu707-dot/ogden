@@ -77,7 +77,11 @@ export default function Simulation() {
                 <div className="space-y-2">
                   <div>
                     <label className="font-mono text-[8px] text-foreground/60 mb-0.5 block">START TOKEN</label>
-                    <select className="w-full rounded-lg bg-background border border-border px-2 py-1.5 font-mono text-[10px] focus:outline-none focus:border-primary/50">
+                    <select 
+                      className="w-full rounded-lg bg-background border border-border px-2 py-1.5 font-mono text-[10px] focus:outline-none focus:border-primary/50"
+                      aria-label="Start Token"
+                      title="Select start token"
+                    >
                       <option>USDC</option>
                       <option>WETH</option>
                       <option>DAI</option>
@@ -96,7 +100,11 @@ export default function Simulation() {
 
                   <div>
                     <label className="font-mono text-[8px] text-foreground/60 mb-0.5 block">MAX HOPS</label>
-                    <select className="w-full rounded-lg bg-background border border-border px-2 py-1.5 font-mono text-[10px] focus:outline-none focus:border-primary/50">
+                    <select
+                      className="w-full rounded-lg bg-background border border-border px-2 py-1.5 font-mono text-[10px] focus:outline-none focus:border-primary/50"
+                      aria-label="Maximum Hops"
+                      title="Select maximum number of hops"
+                    >
                       <option>2</option>
                       <option>3</option>
                       <option>4</option>
@@ -155,8 +163,8 @@ export default function Simulation() {
                       </div>
                       <div className="h-2 bg-border/50 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-primary transition-all duration-300"
-                          style={{ width: `${progress}%` }}
+                          className={`h-full bg-primary transition-all duration-300 progress-bar`}
+                          data-progress={progress}
                         />
                       </div>
                     </div>
@@ -240,8 +248,8 @@ export default function Simulation() {
                             </div>
                             <div className="h-2 bg-border/50 rounded-full overflow-hidden">
                               <div
-                                className={`h-full bg-${risk.color}-500 transition-all duration-500`}
-                                style={{ width: `${risk.value}%` }}
+                                className={`h-full bg-${risk.color}-500 transition-all duration-500 risk-progress-bar`}
+                                data-progress={risk.value}
                               />
                             </div>
                           </div>

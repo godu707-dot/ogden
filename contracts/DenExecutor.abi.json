@@ -1,24 +1,28 @@
-/*
-  Paste the contract ABI here. The Etherscan page at
-  https://etherscan.io/address/0x25B0a1cBf8C2cC862Fa8368102c1C53c4d05d864#code
-  has the full ABI under the "Contract ABI" section. Save it as JSON in this file.
-
-  Example minimal ABI shape (replace with the real ABI):
-  [
-    {
-      "inputs": [ { "internalType": "address[]", "name": "path", "type": "address[]" } ],
-      "name": "execute",
-      "outputs": [],
-      "stateMutability": "payable",
-      "type": "function"
-    },
-    {
-      "anonymous": false,
-      "inputs": [ { "indexed": false, "internalType": "uint256", "name": "profit", "type": "uint256" } ],
-      "name": "ArbitrageExecuted",
-      "type": "event"
-    }
-  ]
-*/
-
-export default []
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address[]",
+        "name": "path",
+        "type": "address[]"
+      }
+    ],
+    "name": "execute",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "profit",
+        "type": "uint256"
+      }
+    ],
+    "name": "ArbitrageExecuted",
+    "type": "event"
+  }
+]

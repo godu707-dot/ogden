@@ -1,0 +1,15 @@
+.progress-bar {
+  width: var(--progress-width);
+}
+
+.progress-bar[data-progress] {
+  --progress-width: calc(attr(data-progress number) * 1%);
+}
+
+.risk-progress-bar {
+  width: var(--risk-progress-width);
+}
+
+.risk-progress-bar[data-progress] {
+  --risk-progress-width: calc(attr(data-progress number) * 1%);
+}

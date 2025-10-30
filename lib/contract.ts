@@ -8,7 +8,9 @@ import ABI from '../contracts/DenExecutor.abi'
 export const getProvider = () => {
   const rpc = process.env.NEXT_PUBLIC_ETHEREUM_RPC
   if (!rpc) throw new Error('NEXT_PUBLIC_ETHEREUM_RPC is not set')
-  return new ethers.providers.JsonRpcProvider(rpc)
+  const provider = new ethers.providers.JsonRpcProvider(rpc)
+  provider.pollingInterval = 1000 // Poll every second for new blocks
+  return provider
 }
 
 export const getContract = (provider?: ethers.providers.Provider) => {

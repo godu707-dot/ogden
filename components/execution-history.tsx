@@ -10,8 +10,12 @@ type ExecEvent = {
   timestamp?: number
 }
 
-export default function ExecutionHistory() {
-  const [events, setEvents] = useState<ExecEvent[]>([])
+interface ExecutionHistoryProps {
+  initialEvents?: ExecEvent[];
+}
+
+export default function ExecutionHistory({ initialEvents = [] }: ExecutionHistoryProps) {
+  const [events, setEvents] = useState<ExecEvent[]>(initialEvents)
 
   useEffect(() => {
     const onArbitrageExecuted = (tokenBorrow: string, amount: any, profit: any, dexPath: string[]) => {
